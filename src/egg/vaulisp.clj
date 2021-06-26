@@ -2,7 +2,6 @@
   (:require [clojure.edn :as edn])
   (:gen-class))
 
-;; Code convention: foo is a symbol, foo* is the evaluation of foo.
 ;; Much cribbed from http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html
 ;;   along with https://axisofeval.blogspot.com and and, most importantly, all
 ;;   of the late John Shutt's work. This project and all of the above are really
@@ -10,33 +9,56 @@
 
 (declare evau, appuy)
 
-(defn map-evau [env args] (map #(evau % env) args))
+(defn map-evau [env args] (map (partial evau env) args))
+
+(defn str-fn [___ & args]
+  ;; (prn "args to str-fn:" args)
+  (apply str args))
+
+(defn my-map [env f args]
+  ;; (prn "args to my-map:" args)
+  (map (fn [x] (f x)) args))
+
+(defn map-fn
+  [env & args]
+  ;; (prn "args to map-fn:" args)
+  ;; (prn "(second args) to map-fn:" (second args))
+  (let [f (evau env (first args))]
+    (my-map env (partial f env) (second args))))
+
 
 (def default-env
   (atom {
-         '+ (fn [env & args] (apply + (map-evau env args)))
-         '- (fn [env & args] (apply - (map-evau env args)))
-         '* (fn [env & args] (apply * (map-evau env args)))
-         '/ (fn [env & args] (apply / (map-evau env args)))
+         'eval  evau
+         'apply appuy
+         '+     (fn [env & args] (apply + (map-evau env args)))
+         '-     (fn [env & args] (apply - (map-evau env args)))
+         '*     (fn [env & args] (apply * (map-evau env args)))
+         '/     (fn [env & args] (apply / (map-evau env args)))
+         '%     (fn [env & args] (map-evau env args))
+         'str   str-fn
+         'inc   (fn [env & args] (+ 1 (evau env (first args))))
+         'map   map-fn
+         'list  (fn [___ & args] args)
          }))
 
 (defn prompt []
   (print "vau> ")
   (flush))
 
-(defn evau [form env]
+(defn evau [env form]
   (cond
     (symbol? form) (get env form)
     (list? form)   (let [car (first form)
-                         _ (prn "car:" car)
-                         car* (evau car env)
-                         _ (prn "car*:" car*)
+                         ;; _ (prn "car:" car)
+                         car* (evau env car)
+                         ;; _ (prn "car*:" car*)
                          ]
                      (try
                        (appuy car* env (rest form))
                        (catch Exception e
                          (throw (Exception. (str "Unknown function " car "\n" (.getMessage e)))))))
-    :else form)) ; keywords, numbers already evaluated
+    :else form)) ; keywords, numbers are self-evaluating
 
 (defn appuy
   "Renaming `apply` with analogy to `eval`=>`evau`"
@@ -59,7 +81,7 @@
             ;; (prn (map type ast))
             (if (= 'q ast)
               (reset! exit true)
-              (prn (evau ast env))))
+              (prn (evau env ast))))
           (prompt))
         (catch Exception e
           (prn)
@@ -72,7 +94,7 @@
   "Run a vau repl"
   [& args]
   (println "Welcome to vaulisp!")
-  (println "  Ctrl-C to exit")
+  (println "  q to exit")
   (println)
   (prompt)
   (repl)
