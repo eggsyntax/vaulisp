@@ -27,7 +27,7 @@
     (my-map env (partial f env) (second args))))
 
 
-(def default-env
+(def global-env
   (atom {
          'eval  evau
          'apply appuy
@@ -37,6 +37,7 @@
          '/     (fn [env & args] (apply / (map-evau env args)))
          '%     (fn [env & args] (map-evau env args))
          'str   str-fn
+         ;; TODO no need for inc here, just wanted another 1-arg fn for test purposes
          'inc   (fn [env & args] (+ 1 (evau env (first args))))
          'map   map-fn
          'list  (fn [___ & args] args)
@@ -48,14 +49,14 @@
 
 (defn evau [env form]
   (cond
-    (symbol? form) (get env form)
+    (symbol? form) (or (get env form) (get @global-env form))
     (list? form)   (let [car (first form)
                          ;; _ (prn "car:" car)
                          car* (evau env car)
                          ;; _ (prn "car*:" car*)
                          ]
                      (try
-                       (appuy car* env (rest form))
+                       (appuy car* env (rest form)) ;; TODO env shouldn't pass down past fn boundaries
                        (catch Exception e
                          (throw (Exception. (str "Unknown function " car "\n" (.getMessage e)))))))
     :else form)) ; keywords, numbers are self-evaluating
@@ -70,7 +71,7 @@
 (defn repl
   "Print prompt once before calling."
   []
-  (let [env @default-env
+  (let [env {}
         exit (atom false)]
     (while (not @exit)
       (try
