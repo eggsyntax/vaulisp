@@ -7,6 +7,24 @@
   ([s] (read-evau {} s))
   ([env s] (vau/evau env (edn/read-string s))))
 
+(deftest env-test
+  (let [e1 (vau/->Env {:a :e1-a, :b :e1-b}),
+        e2 (vau/->Env {:b :e2-b, :c :e2-c, :outer e1})
+        e3 (vau/->Env {:c :e3-c, :d :e3-d, :outer e2})]
+    (testing "Basic mappish behavior"
+      (is (= (e1 :a) :e1-a))
+      (is (= (e1 :b) :e1-b))
+      (is (= (e2 :b) :e2-b))
+      (is (= (e2 :c) :e2-c)))
+    (testing "Searches outer for missing keys"
+      (is (= (e2 :a) :e1-a))) ; NOT :e2-a
+    (testing "Jumps to multiple layers of outer envs"
+      (is (= (e3 :a) :e1-a)))
+    (testing "Doesn't look in child envs"
+      (is (= (e1 :c) nil)))
+
+    ))
+
 (deftest evau-test
   (testing "Basic math"
     (is (= 23 (read-evau "(+ 3 (* 4 5))")))

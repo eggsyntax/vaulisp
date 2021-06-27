@@ -9,7 +9,7 @@
 ;;   of the late John Shutt's work. This project and all of the above are really
 ;;   all just explorations of Shutt's insights.
 
-(declare global-env, evau, appuy)
+(declare global-env, evau)
 
 (defn welcome! []
   (println "Welcome to vaulisp!")
@@ -67,7 +67,6 @@
 (def global-env
   (atom {
          'eval  evau
-         'apply appuy
          '+     (fn [env & args] (apply + (map-evau env args)))
          '-     (fn [env & args] (apply - (map-evau env args)))
          '*     (fn [env & args] (apply * (map-evau env args)))
@@ -94,17 +93,10 @@
                          ;; _ (prn "car*:" car*)
                          ]
                      (try
-                       (appuy car* env (rest form)) ;; TODO env shouldn't pass down past fn boundaries
+                       (apply car* env (rest form)) ;; TODO env shouldn't pass down past fn boundaries
                        (catch Exception e
                          (throw (Exception. (str "Unknown function " car "\n" (.getMessage e)))))))
     :else form)) ; keywords, numbers are self-evaluating
-
-(defn appuy
-  "Renaming `apply` with analogy to `eval`=>`evau`"
-  [operator env operands]
-  (try
-    (apply operator env operands)
-    (catch Exception e (throw (Exception. (str "Unknown operator: " operator "\n" (.getMessage e)))))))
 
 (defn evau-str
   "Accept a string containing vaulisp code (perhaps read from a file), split
