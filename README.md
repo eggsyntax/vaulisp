@@ -25,9 +25,10 @@ evaluate one of their two possible branches.
 
 ### Inspirations:
 
-* Paul Shutt (see his blog, eg here. Or for lots more see his [Report on the Kernel
-Programming Language](ftp://ftp.cs.wpi.edu/pub/techreports/pdf/05-07.pdf) (ftp
-link) or his [dissertation](https://web.wpi.edu/Pubs/ETD/Available/etd-090110-124904/)).
+* Paul Shutt (see his blog, eg [here](https://fexpr.blogspot.com/2011/04/fexpr.html).
+Or for lots more see his
+[Report on the Kernel Programming Language](ftp://ftp.cs.wpi.edu/pub/techreports/pdf/05-07.pdf)
+(ftp link) or his [dissertation](https://web.wpi.edu/Pubs/ETD/Available/etd-090110-124904/)).
 * Manuel Simoni's blog, The Axis of Eval, eg [this post](https://axisofeval.blogspot.com/2012/03/why-fexprs-part-n-or-lambda-only.html)
 * [This blog post](http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html)
 from Gliese 1337.
