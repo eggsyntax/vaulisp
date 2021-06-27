@@ -1,0 +1,13 @@
+#! /usr/bin/env bash
+
+# TODO Currently always starts an nrepl server -- make that an option since
+# it slows things down some
+
+clj \
+ -A:nrepl \
+ -m nrepl.cmdline \
+ --middleware "[cider.nrepl/cider-middleware]" \
+ --interactive
+
+# Without nrepl, it's just:
+# clj -M -m egg.vaulisp

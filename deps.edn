@@ -2,11 +2,10 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
  {:run-m {:main-opts ["-m" "egg.vaulisp"]}
-  :run-x {:ns-default egg.vaulisp
-          :exec-fn greet
-          :exec-args {:name "Clojure"}}
   :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
+  :nrepl {:extra-deps
+          {cider/cider-nrepl {:mvn/version "0.25.2"}}}
   :runner
   {:extra-deps {io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"

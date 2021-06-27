@@ -12,6 +12,10 @@ git clone
 
     clj -M -m egg.vaulisp
 
+or for a REPL which also starts an [nREPL server](https://nrepl.org/nrepl/0.8/usage/server.html#using-clojure-cli-tools):
+
+    ./vau
+
 Coming later: run a vaulisp file or open a repl in the context of such a file.
 
 Basic functions gradually being added. See `egg.vaulisp/global-env` for the set
