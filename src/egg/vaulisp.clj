@@ -1,6 +1,7 @@
 (ns egg.vaulisp
   (:require [clojure.edn :as edn]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [potemkin.collections :refer [def-map-type]])
   (:gen-class))
 
 ;; Much cribbed from http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html
@@ -15,6 +16,31 @@
   (println "  q to exit")
   (println))
 
+;; An Env is a map that has one special property in order to enable static
+;; scoping: it contains a reference to an outer Env. If a key isn't found in the
+;; current, innermost Env, it'll check the parent, the parent's parent, and so
+;; on.
+;;
+;; Note that we treat the global env separately, because for the sake of
+;; convenience we want it mutable so that `def` can be top-level (as opposed to
+;; `let` which adds a binding in the current scope).
+;;
+;; We can create our env-map using clj's built-in capabilities, but it's a real
+;; pain because we have to implement dozens of overlapping functions. Potemkin
+;; handles the hassles for us. https://github.com/clj-commons/potemkin
+(def-map-type Env [m]
+  ;; get, assoc, dissoc, keys, meta, with-meta
+  (get [_ k default] (or (get m k)
+                         (get (:outer m) k)
+                         default))
+  (assoc [_ k v] (Env. (assoc m k v)))
+  (dissoc [_ k] (if (= :outer k)
+                  (throw (Exception. "Can't remove the outer environment from an env!"))
+                  (Env. (dissoc m k))))
+  (keys [_] (keys m))
+  (meta [_] (meta m))
+  (with-meta [_ mta] (with-meta (Env. m) mta)))
+
 (defn map-evau [env args] (map (partial evau env) args))
 
 (defn str-fn
@@ -24,23 +50,19 @@
   ;; (prn "args to str-fn:" args)
   (apply str args))
 
-(defn my-map [env f args]
-  ;; (prn "args to my-map:" args)
-  (map (fn [x] (f x)) args))
 (defn map-fn
   [env & args]
   ;; (prn "args to map-fn:" args)
   ;; (prn "(second args) to map-fn:" (second args))
   (let [f (evau env (first args))]
-    (map #_env (partial f env) (second args))))
+    (map (partial f env) (second args))))
 
 ;; TODO support recursive defs
 (defn def-fn
   [env & [name expr]]
   ;; (prn "defing" name)
   (swap! global-env assoc name (evau env expr))
-  (get @global-env name)
-  #_(str name " => " (get @global-env name)))
+  (get @global-env name))
 
 (def global-env
   (atom {
@@ -97,7 +119,7 @@
 (defn repl
   "Print prompt once before calling."
   []
-  (let [env {}
+  (let [env (Env. {})
         exit (atom false)]
     (evau-str env vau-core) ; load core defs
     (while (not @exit)

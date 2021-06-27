@@ -1,5 +1,6 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        potemkin/potemkin {:mvn/version "0.4.5"}}
  :aliases
  {:run-m {:main-opts ["-m" "egg.vaulisp"]}
   :test {:extra-paths ["test"]
