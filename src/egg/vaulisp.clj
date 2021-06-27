@@ -1,5 +1,6 @@
 (ns egg.vaulisp
-  (:require [clojure.edn :as edn])
+  (:require [clojure.edn :as edn]
+            [clojure.string :as string])
   (:gen-class))
 
 ;; Much cribbed from http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html
@@ -9,27 +10,37 @@
 
 (declare global-env, evau, appuy)
 
+(defn welcome! []
+  (println "Welcome to vaulisp!")
+  (println "  q to exit")
+  (println))
+
 (defn map-evau [env args] (map (partial evau env) args))
 
-(defn str-fn [___ & args]
+(defn str-fn
+  "Worth the annoyance of not evaling args? Can just app/applicate/$ (not sure
+  yet what terminology I prefer there)"
+  [___ & args]
   ;; (prn "args to str-fn:" args)
   (apply str args))
 
 (defn my-map [env f args]
   ;; (prn "args to my-map:" args)
   (map (fn [x] (f x)) args))
-
 (defn map-fn
   [env & args]
   ;; (prn "args to map-fn:" args)
   ;; (prn "(second args) to map-fn:" (second args))
   (let [f (evau env (first args))]
-    (my-map env (partial f env) (second args))))
+    (map #_env (partial f env) (second args))))
 
 ;; TODO support recursive defs
 (defn def-fn
   [env & [name expr]]
-  (swap! global-env assoc name (evau env expr))) ; TODO do I really want to evau here?
+  ;; (prn "defing" name)
+  (swap! global-env assoc name (evau env expr))
+  (get @global-env name)
+  #_(str name " => " (get @global-env name)))
 
 (def global-env
   (atom {
@@ -73,11 +84,22 @@
     (apply operator env operands)
     (catch Exception e (throw (Exception. (str "Unknown operator: " operator "\n" (.getMessage e)))))))
 
+(defn evau-str
+  "Accept a string containing vaulisp code (perhaps read from a file), split
+  into separate lines and parsee/evau them."
+  [env s]
+  (run!
+   (comp (partial evau env) edn/read-string)
+   (string/split-lines s)))
+
+(declare vau-core)
+
 (defn repl
   "Print prompt once before calling."
   []
   (let [env {}
         exit (atom false)]
+    (evau-str env vau-core) ; load core defs
     (while (not @exit)
       (try
         (let [in (read-line)
@@ -99,9 +121,17 @@
 (defn -main
   "Run a vau repl"
   [& args]
-  (println "Welcome to vaulisp!")
-  (println "  q to exit")
-  (println)
+  (welcome!)
   (prompt)
   (repl)
   )
+
+;;;;; The following is additional defs written in vaulisp:
+
+(def vau-core
+  (str "
+
+(def x 3)
+(def y 18)
+
+"))
