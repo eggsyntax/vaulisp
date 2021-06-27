@@ -7,7 +7,7 @@
 ;;   of the late John Shutt's work. This project and all of the above are really
 ;;   all just explorations of Shutt's insights.
 
-(declare evau, appuy)
+(declare global-env, evau, appuy)
 
 (defn map-evau [env args] (map (partial evau env) args))
 
@@ -26,6 +26,10 @@
   (let [f (evau env (first args))]
     (my-map env (partial f env) (second args))))
 
+;; TODO support recursive defs
+(defn def-fn
+  [env & [name expr]]
+  (swap! global-env assoc name (evau env expr))) ; TODO do I really want to evau here?
 
 (def global-env
   (atom {
@@ -37,6 +41,7 @@
          '/     (fn [env & args] (apply / (map-evau env args)))
          '%     (fn [env & args] (map-evau env args))
          'str   str-fn
+         'def   def-fn
          ;; TODO no need for inc here, just wanted another 1-arg fn for test purposes
          'inc   (fn [env & args] (+ 1 (evau env (first args))))
          'map   map-fn
