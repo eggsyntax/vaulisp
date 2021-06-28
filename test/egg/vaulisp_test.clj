@@ -1,9 +1,15 @@
 (ns egg.vaulisp-test
   (:require [clojure.edn :as edn]
-            [clojure.test :refer [is deftest testing]]
+            [clojure.test :refer [is deftest testing use-fixtures]]
             [egg.vaulisp :as vau]))
 
+;; Load core vaulisp fns into global-env (this is normally done by vau/repl)
+(use-fixtures
+  :once
+  (fn [f] (vau/evau-str {} vau/vau-core) (f)))
+
 (defn read-evau
+  "Convenience fn: the RE part of REPL"
   ([s] (read-evau {} s))
   ([env s] (vau/evau env (edn/read-string s))))
 
@@ -21,22 +27,28 @@
     (testing "Jumps to multiple layers of outer envs"
       (is (= (e3 :a) :e1-a)))
     (testing "Doesn't look in child envs"
-      (is (= (e1 :c) nil)))
-
-    ))
+      (is (= (e1 :c) nil)))))
 
 (deftest evau-test
   (testing "Basic math"
     (is (= 23 (read-evau "(+ 3 (* 4 5))")))
     (is (= 42 (read-evau "(* (- (* 3 8) 3) 2)"))))
-  (testing "Inner eval"
-    ;; Problem: this ends up hitting line 106 as (apply <evau-fn> the-env the-env (list 3 4 5)).
-    ;; That's one env too many. Possible solutions:
-    ;; - remove the env from the operator on the assumption that it'll always receive an
-    ;;   env as the first operand
-    ;; - pass to appuy dropping the first *two* from the form, like (appuy car* env (drop 2 form))
-    ;; - ...merge the envs? Are they ever actually different?
-    ;;
-    ;; But is it different in different cases?
-    #_(read-evau "(eval {} (list 3 4 5))")
-    ))
+  (testing "Equality"
+    (is (true?  (read-evau "(= 7 7)")))
+    (is (false? (read-evau "(= 7 9)")))
+    (is (true?  (read-evau "(= (- 7 4) (+ 2 1))"))))
+  (testing "List"
+    (is (= '(1 2 3) (read-evau "(list 1 2 3)"))))
+  (testing "Map"
+    (is (= '(3 4 5) (read-evau "(map inc (2 3 4))")))
+    (is (= '("a" "b" "c") (read-evau "(map str (a b c))"))))
+  )
+
+(deftest vau-test
+  (testing "Formal args substituted but the call args aren't evaled unless something in the body explicitly evals them"
+    ;; recall x and y are defed in the global-env. `str` does not eval its args.
+    (is (= "xy" (read-evau "(( vau (a b) (str a b) ) x y)")))
+    (is (= '("x" "y") (read-evau "(( vau (a b) (map str (a b)) ) x y)"))))
+  (testing "Whereas with a fn in body that evals its args (`+`), they'll be fully evaled"
+    (is (= 7 (read-evau "(( vau (a b) (+ a b) ) 3 4)")))
+    (is (= 21 (read-evau "(( vau (a b) (+ a b) ) x y)")))))

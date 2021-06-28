@@ -1,6 +1,7 @@
 (ns egg.vaulisp
   (:require [clojure.edn :as edn]
             [clojure.string :as string]
+            [clojure.walk :refer [postwalk-replace]]
             [potemkin.collections :refer [def-map-type]])
   (:gen-class))
 
@@ -41,7 +42,9 @@
   (meta [_] (meta m))
   (with-meta [_ mta] (with-meta (Env. m) mta)))
 
-(defn map-evau [env args] (map (partial evau env) args))
+(defn map-evau
+  [env args]
+  (map (partial evau env) args))
 
 (defn str-fn
   "Worth the annoyance of not evaling args? Can just app/applicate/$ (not sure
@@ -64,14 +67,28 @@
   (swap! global-env assoc name (evau env expr))
   (get @global-env name))
 
+(defn vau
+  "The operative equivalent of `lambda` (or in clj, `fn`), ie a version of
+  lambda that doesn't eval its args. This, rather than lambda, is the fundamental
+  primitive of a fexpr-based lisp."
+  [closure-env formal-args body]
+  (fn closure [call-env & args]
+    (let [env-args (zipmap formal-args args)
+          new-env (Env. (merge closure-env env-args))
+          body-substituted (postwalk-replace env-args body)]
+      (evau new-env body-substituted))))
+
 (def global-env
   (atom {
          'eval  evau
+         'vau   vau
          '+     (fn [env & args] (apply + (map-evau env args)))
          '-     (fn [env & args] (apply - (map-evau env args)))
          '*     (fn [env & args] (apply * (map-evau env args)))
          '/     (fn [env & args] (apply / (map-evau env args)))
          '%     (fn [env & args] (map-evau env args))
+         '=     (fn [env & args] (let [[a b] args]
+                                   (= (evau env a) (evau env b))))
          'str   str-fn
          'def   def-fn
          ;; TODO no need for inc here, just wanted another 1-arg fn for test purposes
