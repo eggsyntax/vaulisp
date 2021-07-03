@@ -1,13 +1,35 @@
 #! /usr/bin/env bash
 
-# TODO Currently always starts an nrepl server -- make that an option since
-# it slows things down some
+## opts parsing, see https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 
-clj \
- -A:nrepl \
- -m nrepl.cmdline \
- --middleware "[cider.nrepl/cider-middleware]" \
- --interactive
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
 
-# Without nrepl, it's just:
-# clj -M -m egg.vaulisp
+    case $key in
+        -n|--nrepl)
+            USE_NREPL=YES
+            shift # past argument
+            ;;
+    esac
+done
+
+echo foo
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo bar
+
+## end opts parsing
+
+if [[ -n ${USE_NREPL} ]]; then
+    echo "Starting vaulisp REPL (with NREPL server)"
+    clj \
+        -A:nrepl \
+        -m nrepl.cmdline \
+        --middleware "[cider.nrepl/cider-middleware]" \
+        --interactive
+else
+    echo "Starting vaulisp REPL"
+    clj -M -m egg.vaulisp
+fi
