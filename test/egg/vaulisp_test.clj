@@ -39,14 +39,24 @@
     (is (true?  (read-evau "(= (- 7 4) (+ 2 1))"))))
   (testing "List"
     (is (= '(1 2 3) (read-evau "(list 1 2 3)"))))
+  (testing "If"
+    (is (= '1 (read-evau "(if true 1 2)")))
+    (is (= '2 (read-evau "(if false 1 2)"))))
+  (testing "If doesn't eval untaken branch"
+    (with-redefs-fn {#'vau/list-fn #(throw (Exception. "Went down the wrong branch!"))}
+      #(do (is (= '1 (read-evau "(if true 1 (list 7 8))")))
+           (is (= '2 (read-evau "(if false (list 7 8) 2)"))))))
   (testing "Map"
     (is (= '(3 4 5) (read-evau "(map inc (2 3 4))")))
     (is (= '("a" "b" "c") (read-evau "(map str (a b c))"))))
+  (testing "Do"
+    (is (= 5 (read-evau "(do 3 4 5)")))
+    (is (= 18 (read-evau "(do (def x1 17) (inc x1))"))))
   )
 
 (deftest vau-test
   (testing "Formal args substituted but the call args aren't evaled unless something in the body explicitly evals them"
-    ;; recall x and y are defed in the global-env. `str` does not eval its args.
+    ;; recall x and y are defed in the global-env (x=3, y=18). `str` does not eval its args.
     (is (= "xy" (read-evau "(( vau (a b) (str a b) ) x y)")))
     (is (= '("x" "y") (read-evau "(( vau (a b) (map str (a b)) ) x y)"))))
   (testing "Whereas with a fn in body that evals its args (`+`), they'll be fully evaled"

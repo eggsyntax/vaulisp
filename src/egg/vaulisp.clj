@@ -53,12 +53,35 @@
   ;; (prn "args to str-fn:" args)
   (apply str args))
 
+(defn =-fn
+  "Test for equality" ; TODO handle > 2 args
+  [env & args]
+  (let [[a b] args]
+    (= (evau env a) (evau env b))))
+
+(defn list-fn [_env & args]
+  ;; (prn "called list!")
+  args)
+
 (defn map-fn
   [env & args]
   ;; (prn "args to map-fn:" args)
   ;; (prn "(second args) to map-fn:" (second args))
   (let [f (evau env (first args))]
     (map (partial f env) (second args))))
+
+(defn do-fn
+  [env & args]
+  (let [just-eval (butlast args)
+        eval-&-return (last args)]
+    (run! #(evau env %) just-eval)
+    (evau env eval-&-return)))
+
+(defn if-fn
+  [env & [test consequent alt]]
+  ;; defer directly to clj's `if` which should be just fine for our needs, since
+  ;; it already selectively evals its arguments
+  (if (evau env test) (evau env consequent) (evau env alt)))
 
 ;; TODO support recursive defs
 (defn def-fn
@@ -78,23 +101,27 @@
           body-substituted (postwalk-replace env-args body)]
       (evau new-env body-substituted))))
 
+;; Note: available edn-interpretable symbols (for short aliases) include ! $ % & ' | ?
 (def global-env
-  (atom {
+  (atom {'true  true
+         'false false
          'eval  evau
+         '$     evau
          'vau   vau
          '+     (fn [env & args] (apply + (map-evau env args)))
          '-     (fn [env & args] (apply - (map-evau env args)))
          '*     (fn [env & args] (apply * (map-evau env args)))
          '/     (fn [env & args] (apply / (map-evau env args)))
          '%     (fn [env & args] (map-evau env args))
-         '=     (fn [env & args] (let [[a b] args]
-                                   (= (evau env a) (evau env b))))
-         'str   str-fn
-         'def   def-fn
+         '=     #'=-fn
+         'list  #'list-fn
+         'map   #'map-fn
+         'do    #'do-fn
+         'if    #'if-fn
+         'str   #'str-fn
+         'def   #'def-fn
          ;; TODO no need for inc here, just wanted another 1-arg fn for test purposes
          'inc   (fn [env & args] (+ 1 (evau env (first args))))
-         'map   map-fn
-         'list  (fn [___ & args] args)
          }))
 
 (defn prompt []
@@ -103,7 +130,7 @@
 
 (defn evau [env form]
   (cond
-    (symbol? form) (or (get env form) (get @global-env form))
+    (symbol? form) (or (get env form) (get @global-env form)) ; [1]
     (list? form)   (let [car (first form)
                          ;; _ (prn "car:" car)
                          car* (evau env car)
@@ -166,3 +193,12 @@
 (def y 18)
 
 "))
+
+
+'(Footnotes -
+  1. alternate approach to checking in env and global env in evau -- instead of
+     having :outer in an env be a direct reference to the outer env, it could be
+     a thunk that returns it. If (in thunk) it saw that the value was an atom it
+     could deref it. The thunk is important here so that it can always get the very
+     latest version of the global-env.
+  )
