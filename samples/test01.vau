@@ -1,0 +1,18 @@
+;; First test of using an external file for vaulisp
+
+(def a 8)
+
+(def non-evaling-fn
+  (vau [x] (str "<-" x "->")))
+
+(prn "non-evaling-fn" (non-evaling-fn a))
+
+(def evaling-fn (applicate (vau [x] (str "<-" x "->"))))
+
+(prn "evaling-fn" (evaling-fn a))
+
+(evaling-fn a)
+
+(def evaling-fn2 (applicate non-evaling-fn))
+
+(prn "evaling-fn2" (evaling-fn2 a))
