@@ -101,7 +101,6 @@
           body-substituted (postwalk-replace env-args body)]
       (evau new-env body-substituted))))
 
-;; TODO test
 (defn applicate-fn
   "What Shutt calls 'wrap' -- convert a vau expression to a lambda expression."
   [closure-env vau-exp-or-reference]
@@ -203,18 +202,22 @@
   (repl)
   )
 
+(defn do-wrap
+  "Wrap a string containing one or more expressions in a do."
+  [s]
+  (str "(do " s " )"))
+
 ;; TODO temp to make it easier to run stuff copied from test ns
 (defn read-evau
   ([s] (read-evau {} s))
-  ([env s] (evau env (edn/read-string s))))
+  ([env s] (evau env (edn/read-string (do-wrap s)))))
 
 (defn evau-file [filename]
   (let [init-env {}
-        contents (slurp filename)
-        with-do (str "(do " contents " )")]
+        contents (slurp filename)]
     (evau-str init-env vau-core) ; load core defs
-    (evau init-env (edn/read-string with-do))
-    #_(edn/read-string with-do)))
+    (evau init-env (edn/read-string (do-wrap contents)))))
+
 
 ;;;;; The following is additional defs written in vaulisp:
 

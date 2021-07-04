@@ -62,3 +62,18 @@
   (testing "Whereas with a fn in body that evals its args (`+`), they'll be fully evaled"
     (is (= 7 (read-evau "(( vau (a b) (+ a b) ) 3 4)")))
     (is (= 21 (read-evau "(( vau (a b) (+ a b) ) x y)")))))
+
+;; Minor TODO: test on a fn of multiple args
+(deftest applicate-test
+  (read-evau ; setup
+   "(def a 8)
+    (def non-evaling-fn
+       (vau [x] (str \"<-\" x \"->\")))")
+  (testing "non-evaling-fn doesn't eval (of course)"
+    (is (= "<-a->" (read-evau "(non-evaling-fn a)"))))
+  (testing "Works for vau literals"
+    (is (= "<-8->"
+         (read-evau "((applicate (vau [x] (str \"<-\" x \"->\"))) a)"))))
+  (testing "Works for symbols bound to vau expressions"
+    (is (= "<-8->"
+           (read-evau "((applicate non-evaling-fn) a)")))))
