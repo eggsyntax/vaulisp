@@ -23,7 +23,7 @@
 ;; on.
 ;;
 ;; Note that we treat the global env separately, because for the sake of
-;; convenience we want it mutable so that `def` can be top-level (as opposed to
+;; convenience we want it ~mutable so that `def` can be top-level (as opposed to
 ;; `let` which adds a binding in the current scope).
 ;;
 ;; We can create our env-map using clj's built-in capabilities, but it's a real
@@ -101,27 +101,46 @@
           body-substituted (postwalk-replace env-args body)]
       (evau new-env body-substituted))))
 
+;; TODO test
+(defn applicate-fn
+  "What Shutt calls 'wrap' -- convert a vau expression to a lambda expression."
+  [closure-env vau-exp-or-reference]
+  (let [v' (evau closure-env vau-exp-or-reference)]
+    (fn [env & args]
+      (apply v' env (map-evau env args)))))
+
+(defmacro vfn
+  "Convenience for converting a clojure fn to a vaulisp fn -- useful for
+  shorthanding fn defs (see eg the arithmetic operators in global-env below)"
+  [form eval?]
+  (if eval?
+    `(fn [env# & args#] (apply ~form (map-evau env# args#)))
+    `(fn [env# & args#] (apply ~form args#))))
+
 ;; Note: available edn-interpretable symbols (for short aliases) include ! $ % & ' | ?
 (def global-env
-  (atom {'true  true
-         'false false
-         'eval  evau
-         '$     evau
-         'vau   vau
-         '+     (fn [env & args] (apply + (map-evau env args)))
-         '-     (fn [env & args] (apply - (map-evau env args)))
-         '*     (fn [env & args] (apply * (map-evau env args)))
-         '/     (fn [env & args] (apply / (map-evau env args)))
-         '%     (fn [env & args] (map-evau env args))
-         '=     #'=-fn
-         'list  #'list-fn
-         'map   #'map-fn
-         'do    #'do-fn
-         'if    #'if-fn
-         'str   #'str-fn
-         'def   #'def-fn
-         ;; TODO no need for inc here, just wanted another 1-arg fn for test purposes
-         'inc   (fn [env & args] (+ 1 (evau env (first args))))
+  (atom {'true      true
+         'false     false
+         'nil       nil
+         'eval      evau
+         '$         evau
+         'vau       vau
+         'applicate applicate-fn
+         '+         (vfn + true)
+         '-         (vfn - true)
+         '*         (vfn * true)
+         '/         (vfn / true)
+         'prn       (vfn prn true)
+         'first     (vfn first false)
+         'rest      (vfn next false) ; consider changing to `rest` - (rest [1]) is (); (next [1]) is nil
+         '=         #'=-fn
+         'list      #'list-fn
+         'map       #'map-fn
+         'do        #'do-fn
+         'if        #'if-fn
+         'str       #'str-fn
+         'def       #'def-fn
+         'inc       (fn [env & args] (+ 1 (evau env (first args)))) ;; TODO def in vl
          }))
 
 (defn prompt []
@@ -183,6 +202,19 @@
   (prompt)
   (repl)
   )
+
+;; TODO temp to make it easier to run stuff copied from test ns
+(defn read-evau
+  ([s] (read-evau {} s))
+  ([env s] (evau env (edn/read-string s))))
+
+(defn evau-file [filename]
+  (let [init-env {}
+        contents (slurp filename)
+        with-do (str "(do " contents " )")]
+    (evau-str init-env vau-core) ; load core defs
+    (evau init-env (edn/read-string with-do))
+    #_(edn/read-string with-do)))
 
 ;;;;; The following is additional defs written in vaulisp:
 
