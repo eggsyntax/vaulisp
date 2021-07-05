@@ -5,11 +5,6 @@
             [potemkin.collections :refer [def-map-type]])
   (:gen-class))
 
-;; Much cribbed from http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html
-;;   along with https://axisofeval.blogspot.com and and, most importantly, all
-;;   of the late John Shutt's work. This project and all of the above are really
-;;   all just explorations of Shutt's insights.
-
 (declare global-env, evau)
 
 (defn welcome! []
@@ -150,10 +145,7 @@
   (cond
     (symbol? form) (or (get env form) (get @global-env form)) ; [1]
     (list? form)   (let [car (first form)
-                         ;; _ (prn "car:" car)
-                         car* (evau env car)
-                         ;; _ (prn "car*:" car*)
-                         ]
+                         car* (evau env car)]
                      (try
                        (apply car* env (rest form)) ;; TODO env shouldn't pass down past fn boundaries
                        (catch Exception e
@@ -168,14 +160,11 @@
    (comp (partial evau env) edn/read-string)
    (string/split-lines s)))
 
-(declare vau-core)
-
 (defn repl
   "Print prompt once before calling."
   []
   (let [env (Env. {})
         exit (atom false)]
-    (evau-str env vau-core) ; load core defs
     (while (not @exit)
       (try
         (let [in (read-line)
@@ -194,14 +183,6 @@
           (prompt)
           (flush))))))
 
-(defn -main
-  "Run a vau repl"
-  [& args]
-  (welcome!)
-  (prompt)
-  (repl)
-  )
-
 (defn do-wrap
   "Wrap a string containing one or more expressions in a do."
   [s]
@@ -215,19 +196,19 @@
 (defn evau-file [filename]
   (let [init-env {}
         contents (slurp filename)]
-    (evau-str init-env vau-core) ; load core defs
     (evau init-env (edn/read-string (do-wrap contents)))))
 
 
-;;;;; The following is additional defs written in vaulisp:
+  )
 
-(def vau-core
-  (str "
+(evau-file "vausrc/core.vau")
 
-(def x 3)
-(def y 18)
-
-"))
+(defn -main
+  "Run a vau repl"
+  [& args]
+  (welcome!)
+  (prompt)
+  (repl))
 
 
 '(Footnotes -

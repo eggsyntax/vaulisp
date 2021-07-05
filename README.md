@@ -34,7 +34,7 @@ Or for lots more see his
 [Report on the Kernel Programming Language](ftp://ftp.cs.wpi.edu/pub/techreports/pdf/05-07.pdf)
 (ftp link) or his [dissertation](https://web.wpi.edu/Pubs/ETD/Available/etd-090110-124904/)).
 * Manuel Simoni's blog, The Axis of Eval, eg [this post](https://axisofeval.blogspot.com/2012/03/why-fexprs-part-n-or-lambda-only.html)
-* [This blog post](http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html)
+* I've cribbed heavily from [This blog post](http://gliese1337.blogspot.com/2012/04/schrodingers-equation-of-software.html)
 from Gliese 1337.
 
 While vaulisp isn't inspired by Paul Graham's language [Bel](http://www.paulgraham.com/bel.html),

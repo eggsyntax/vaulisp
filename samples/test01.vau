@@ -2,17 +2,17 @@
 
 (def a 8)
 
-(def non-evaling-fn
-  (vau [x] (str "<-" x "->")))
+;; (def non-evaling-fn
+;;   (vau [x] (str "<-" x "->")))
 
-(prn "non-evaling-fn" (non-evaling-fn a))
+;; (prn "non-evaling-fn" (non-evaling-fn a))
 
-(def evaling-fn (applicate (vau [x] (str "<-" x "->"))))
+;; (def evaling-fn (applicate (vau [x] (str "<-" x "->"))))
 
-(prn "evaling-fn" (evaling-fn a))
+;; (prn "evaling-fn" (evaling-fn a))
 
-(evaling-fn a)
+;; (evaling-fn a)
 
-(def evaling-fn2 (applicate non-evaling-fn))
+;; (def evaling-fn2 (applicate non-evaling-fn))
 
-(prn "evaling-fn2" (evaling-fn2 a))
+;; (prn "evaling-fn2" (evaling-fn2 a))

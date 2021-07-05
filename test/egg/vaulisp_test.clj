@@ -1,17 +1,14 @@
 (ns egg.vaulisp-test
   (:require [clojure.edn :as edn]
-            [clojure.test :refer [is deftest testing use-fixtures]]
+            [clojure.test :refer [is deftest testing]]
             [egg.vaulisp :as vau]))
-
-;; Load core vaulisp fns into global-env (this is normally done by vau/repl)
-(use-fixtures
-  :once
-  (fn [f] (vau/evau-str {} vau/vau-core) (f)))
 
 (defn read-evau
   "Convenience fn: the RE part of REPL"
   ([s] (read-evau {} s))
-  ([env s] (vau/evau env (edn/read-string s))))
+  ([env s] (vau/evau env (edn/read-string (vau/do-wrap s)))))
+
+(read-evau "(def x 3) (def y 18)") ;; used in tests
 
 (deftest env-test
   (let [e1 (vau/->Env {:a :e1-a, :b :e1-b}),
