@@ -74,3 +74,12 @@
   (testing "Works for symbols bound to vau expressions"
     (is (= "<-8->"
            (read-evau "((applicate non-evaling-fn) a)")))))
+
+(deftest lambda-test
+  (read-evau
+   "(def f1 (lambda (a b) (str a b)))
+    (def f2 (lambda (a b) (+ a b)))")
+  (testing "Lambda works correctly with non-evaling fns like str"
+    (is (= "318" (read-evau "(f1 x y)"))))
+  (testing "Lambda works correctly with evaling fns like +"
+    (is (= 21 (read-evau "(f2 x y)")))))

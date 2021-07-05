@@ -1,0 +1,3 @@
+(def lambda
+  (vau (args body)
+    (applicate (vau args body))))
