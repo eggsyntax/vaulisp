@@ -1,3 +1,7 @@
 (def lambda
   (vau (args body)
     (applicate (vau args body))))
+
+(def inc (lambda (x) (+ x 1)))
+
+(def dec (lambda (x) (- x 1)))

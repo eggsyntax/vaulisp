@@ -105,13 +105,15 @@
 
 (defmacro vfn
   "Convenience for converting a clojure fn to a vaulisp fn -- useful for
-  shorthanding fn defs (see eg the arithmetic operators in global-env below)"
+  shorthanding fn defs (see eg the arithmetic operators in global-env below).
+  Optionally evaluates its arguments."
   [form eval?]
   (if eval?
     `(fn [env# & args#] (apply ~form (map-evau env# args#)))
     `(fn [env# & args#] (apply ~form args#))))
 
-;; Note: available edn-interpretable symbols (for short aliases) include ! $ % & ' | ?
+;; Note: available edn-interpretable symbols (for short aliases) include ! % & ' | ?
+;;       - already-used: $ (and of course +, -, *, /, =)
 (def global-env
   (atom {'true      true
          'false     false
@@ -134,14 +136,18 @@
          'if        #'if-fn
          'str       #'str-fn
          'def       #'def-fn
-         'inc       (fn [env & args] (+ 1 (evau env (first args)))) ;; TODO def in vl
          }))
 
 (defn prompt []
   (print "vau> ")
   (flush))
 
-(defn evau [env form]
+(defn evau
+  "Central evaluation function, equivalent to the eval in a conventional lisp's metacircular
+  evaluator; see eg http://norvig.com/lispy.html. Here the evaluation fn is much smaller,
+  because more core definitions can move into the global-env (since there are many fewer
+  special forms)."
+  [env form]
   (cond
     (symbol? form) (or (get env form) (get @global-env form)) ; [1]
     (list? form)   (let [car (first form)
