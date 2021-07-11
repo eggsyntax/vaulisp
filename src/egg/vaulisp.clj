@@ -5,6 +5,8 @@
             [potemkin.collections :refer [def-map-type]])
   (:gen-class))
 
+(def CLJ-CALL true) ; fallback to clojure fns?
+
 (declare global-env, evau)
 
 (defn welcome! []
@@ -168,8 +170,12 @@
     (list? form)   (let [car (first form)
                          car* (evau env car)]
                      (try
-                       (apply car* env (rest form)) ;; TODO env shouldn't pass down past fn boundaries
-                       (catch Exception e
+                       (if car*
+                         (apply car* env (rest form))  ;; TODO env shouldn't pass down past fn boundaries?
+                         (if CLJ-CALL
+                           ;; nonexistent operator? Try it as a clojure.core fn
+                           (let [clj-fn (ns-resolve 'clojure.core car)]
+                             (apply clj-fn (map-evau env (rest form))))))
                          (throw (Exception. (str "Unknown function " car "\n" (.getMessage e)))))))
     :else form)) ; keywords, numbers are self-evaluating
 
@@ -219,6 +225,8 @@
         contents (slurp filename)]
     (evau init-env (edn/read-string (do-wrap contents)))))
 
+;; Convenience fn, so you can just do eg (r '(inc 1)) at the clj repl
+(def r #(read-evau {} (str %)))
 
   )
 
