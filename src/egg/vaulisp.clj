@@ -118,18 +118,20 @@
   (atom {'true      true
          'false     false
          'nil       nil
-         'eval      evau
-         '$         evau
-         'vau       vau
-         'applicate applicate-fn
+         'eval      #'evau
+         '$         #'evau
+         'vau       #'vau
+         'applicate #'applicate-fn
          '+         (vfn + true)
          '-         (vfn - true)
          '*         (vfn * true)
          '/         (vfn / true)
+         '<         (vfn < true)
+         '>         (vfn > true)
+         '=         #'=-fn
          'prn       (vfn prn true)
          'first     (vfn first false)
          'rest      (vfn next false) ; consider changing to `rest` - (rest [1]) is (); (next [1]) is nil
-         '=         #'=-fn
          'list      #'list-fn
          'map       #'map-fn
          'do        #'do-fn
