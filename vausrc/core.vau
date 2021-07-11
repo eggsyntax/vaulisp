@@ -2,6 +2,8 @@
   (vau (args body)
     (applicate (vau args body))))
 
+(def not (vau (x) (if (eval x) false true)))
+
 (def inc (lambda (x) (+ x 1)))
 
 (def dec (lambda (x) (- x 1)))

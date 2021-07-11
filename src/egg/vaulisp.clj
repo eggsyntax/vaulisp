@@ -78,12 +78,23 @@
   ;; it already selectively evals its arguments
   (if (evau env test) (evau env consequent) (evau env alt)))
 
+(defn throw-fn
+  [_env & msg]
+  (throw (Exception. msg)))
+
 ;; TODO support recursive defs
 (defn def-fn
   [env & [name expr]]
   ;; (prn "defing" name)
   (swap! global-env assoc name (evau env expr))
   (get @global-env name))
+
+(defn getenv-fn
+  "Inside vaulisp we don't actually see the env, eg we create a vau with
+  (vau (x) (+ x 3)) -- no reference to env. But we want env to be first-class
+  so we provide a way to get it."
+  [env & _]
+  env)
 
 (defn vau
   "The operative equivalent of `lambda` (or in clj, `fn`), ie a version of
@@ -122,6 +133,7 @@
          '$         #'evau
          'vau       #'vau
          'applicate #'applicate-fn
+         'getenv    #'getenv-fn
          '+         (vfn + true)
          '-         (vfn - true)
          '*         (vfn * true)
@@ -132,6 +144,7 @@
          'prn       (vfn prn true)
          'first     (vfn first false)
          'rest      (vfn next false) ; consider changing to `rest` - (rest [1]) is (); (next [1]) is nil
+         'cons      (vfn cons true)
          'list      #'list-fn
          'map       #'map-fn
          'do        #'do-fn
@@ -209,6 +222,7 @@
 
   )
 
+;; Load core definitions in vaulisp
 (evau-file "vausrc/core.vau")
 
 (defn -main

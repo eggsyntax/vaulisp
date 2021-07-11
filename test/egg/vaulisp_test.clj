@@ -65,7 +65,13 @@
     (is (= '("x" "y") (read-evau "(( vau (a b) (map str (a b)) ) x y)"))))
   (testing "Whereas with a fn in body that evals its args (`+`), they'll be fully evaled"
     (is (= 7 (read-evau "(( vau (a b) (+ a b) ) 3 4)")))
-    (is (= 21 (read-evau "(( vau (a b) (+ a b) ) x y)")))))
+    (is (= 21 (read-evau "(( vau (a b) (+ a b) ) x y)"))))
+  (testing "Can define a new special form using vau, which will only eval one of its sides"
+    (do
+      (read-evau "(def unless (vau (test consequent alt) (if (eval test) (eval alt) (eval consequent))))")
+      (is (true?  (read-evau "(unless (= true false) true (throw \"Wrong branch!\"))")))
+      (is (true?  (read-evau "(unless (= x 10) true (throw \"Wrong branch!\"))"))) ; x = 3
+      (is (false? (read-evau "(unless (= x 3) (throw \"Wrong branch!\") false)"))))))
 
 ;; Minor TODO: test on a fn of multiple args
 (deftest applicate-test
