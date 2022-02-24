@@ -1,0 +1,74 @@
+;; First test of using an external file for vaulisp
+
+(def a 8)
+
+;; (def non-evaling-fn
+;;   (vau [x] (str "<-" x "->")))
+
+;; (prn "non-evaling-fn" (non-evaling-fn a))
+
+;; (def evaling-fn (applicate (vau [x] (str "<-" x "->"))))
+
+;; (prn "evaling-fn" (evaling-fn a))
+
+;; (evaling-fn a)
+
+;; (def evaling-fn2 (applicate non-evaling-fn))
+
+;; (prn "evaling-fn2" (evaling-fn2 a))
+
+;; (def f1 ( vau (x) (map str args) ))
+
+;; (prn "f1" (f1 x y))
+
+;; (def f2 ( vau (a b) (map str a b) ))
+
+;; (prn "f2" (f2 x y))
+
+;; (def defn (vau [& args] ))
+;; (def lambda
+;;    (vau [])
+
+(def x 5)
+
+(def y 22)
+
+(def z x)
+
+;; (def g ( vau (a b) (str a b) ))
+
+;; (prn "g" (g x y))
+
+;; (def h (applicate ( vau (a b) (str a b) )))
+
+;; (prn "h" (h x y))
+
+;; (def i (applicate ( vau (a b) (+ a b) )))
+
+;; (prn "i" (i x y))
+
+;; (def f1 (lambda (a b) (str a b)))
+
+;; (prn "f1" (f1 x y))
+
+;; (def f2 (lambda (a b) (+ a b)))
+
+;; (prn "f2" (f2 x y))
+
+;; (prn (cons 3 (list 4 5 6)))
+
+;; (unless (= 3 5) (prn "true!") (prn "false!"))
+
+;; (def recur-test
+;;   (vau (l) (do (prn "l:" l)
+;;                (prn "(first l)" (first l))
+;;                (if (first l)
+;;                  (recur-test (rest l))
+;;                  nil))))
+
+(def recur-test
+  (lambda (l) (do (prn "l:" l)
+                  (prn "(first l)" (first l))
+                  (if (first l)
+                    (recur-test (rest l))
+                    nil))))

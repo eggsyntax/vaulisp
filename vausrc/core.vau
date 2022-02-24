@@ -7,3 +7,45 @@
 (def inc (lambda (x) (+ x 1)))
 
 (def dec (lambda (x) (- x 1)))
+
+#_(def count*
+  (vau (n coll)
+          (do
+            (prn "count*" n coll)
+            (prn "(inc n)" (inc n))
+            (prn "(rest coll)" (rest coll))
+            (prn "(list (rest (rest coll)))" (eval (list (rest (rest coll)))))
+            #_(if (first coll)
+              (count* (inc n) (list (rest (rest coll))))
+              n))))
+
+;; (count* 0 (3 4 5))
+
+;; (def count
+;;   (vau (coll) (count* 0 coll)))
+
+
+;; clj
+;; (defn reduce' [f val coll]
+;;   (reduce' f (f val (first coll)) (rest coll)))
+
+;; (def let->env
+;;   (vau [bindings]
+;;        () ;; TODO
+;;        ))
+
+#_(def let
+  (vau
+   (bindings body) ; TODO implicit do
+   ((vau (mapevau bindings) body)  )
+   nil ;; TODO
+   ))
+
+
+;; if I were writing it in clojure:
+;; (def let->env
+;;   (fn [bindings]
+;;     (reduce
+;;      (fn [env binding-pair]
+;;        (assoc env (first binding-pair) (first (rest binding-pair))))
+;;      (partition 2 bindings))))

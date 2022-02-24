@@ -54,8 +54,10 @@
   (testing "Eval"
     (is (= '(3 4 5) (read-evau "(eval (list 3 4 5))"))))
   (testing "Recursion"
-    (is (= 36 (read-evau "(def triangle (vau (n) (if (> n 0) (+ n (triangle (dec n))) n))) (triangle 8)")))
-    (is (= 34 (read-evau "(def fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 8)"))))
+    (is (= 36
+           (read-evau "(def triangle (vau (n) (if (> n 0) (+ n (triangle (dec n))) n))) (triangle 8)")))
+    (is (= 34
+           (read-evau "(def fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 8)"))))
   )
 
 (deftest vau-test
